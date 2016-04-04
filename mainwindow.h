@@ -57,6 +57,7 @@ struct Mavlink_Messages {
     mavlink_mission_request_list_t mission_request_list;
     mavlink_param_set_t param_set;
     mavlink_mission_ack_t mission_ack;
+    mavlink_statustext_t statustext;
 
 
     // System Parameters?
