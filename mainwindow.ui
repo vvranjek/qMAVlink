@@ -17,41 +17,18 @@
    <widget class="QTextBrowser" name="serialBrowser">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>130</y>
-      <width>491</width>
-      <height>341</height>
-     </rect>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="PortRefresh">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
+      <x>150</x>
       <y>0</y>
-      <width>101</width>
-      <height>27</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Refresh</string>
-    </property>
-   </widget>
-   <widget class="QComboBox" name="portBox">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>90</y>
-      <width>101</width>
-      <height>27</height>
+      <width>181</width>
+      <height>341</height>
      </rect>
     </property>
    </widget>
    <widget class="QTextEdit" name="mavlinkIn">
     <property name="geometry">
      <rect>
-      <x>680</x>
-      <y>130</y>
+      <x>340</x>
+      <y>0</y>
       <width>501</width>
       <height>341</height>
      </rect>
@@ -60,8 +37,8 @@
    <widget class="QPushButton" name="sendButton">
     <property name="geometry">
      <rect>
-      <x>630</x>
-      <y>540</y>
+      <x>740</x>
+      <y>340</y>
       <width>99</width>
       <height>27</height>
      </rect>
@@ -70,34 +47,59 @@
      <string>Send</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="connectButton">
+   <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>120</y>
+      <x>340</x>
+      <y>340</y>
       <width>99</width>
       <height>27</height>
      </rect>
     </property>
     <property name="text">
-     <string>Connect</string>
-    </property>
-    <property name="checkable">
-     <bool>true</bool>
-    </property>
-    <property name="checked">
-     <bool>true</bool>
+     <string>Clear</string>
     </property>
    </widget>
-   <widget class="QComboBox" name="baudBox">
+   <widget class="QWidget" name="">
     <property name="geometry">
      <rect>
       <x>30</x>
-      <y>40</y>
-      <width>101</width>
-      <height>27</height>
+      <y>0</y>
+      <width>111</width>
+      <height>111</height>
      </rect>
     </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>2</number>
+     </property>
+     <item>
+      <widget class="QPushButton" name="PortRefresh">
+       <property name="text">
+        <string>Refresh</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="baudBox"/>
+     </item>
+     <item>
+      <widget class="QComboBox" name="portBox"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="connectButton">
+       <property name="text">
+        <string>Connect</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
