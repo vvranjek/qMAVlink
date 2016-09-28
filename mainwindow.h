@@ -5,6 +5,7 @@
 
 #include "qextserialport.h"
 #include "common/mavlink.h"
+//#include "cap/cap.h"
 #include "qelapsedtimer.h"
 
 namespace Ui {
@@ -58,6 +59,13 @@ struct Mavlink_Messages {
     mavlink_param_set_t param_set;
     mavlink_mission_ack_t mission_ack;
     mavlink_statustext_t statustext;
+    mavlink_set_mode_t set_mode;
+    mavlink_param_value_t param_value;
+    //mavlink_wind_cov_t wind;
+    mavlink_cap_status_t cap_status;
+    mavlink_serial_passthrough_t serial_passthrough;
+    mavlink_wind_cov_t wind_cov;
+    mavlink_nav_controller_output_t nav_controller_output;
 
 
     // System Parameters?
@@ -149,16 +157,27 @@ private slots:
     int _refresh_serial();
     int connect_serial();
 
+    void heartbeat();
+
     void on_PortRefresh_released();
     void on_sendButton_released();
     void on_portBox_currentIndexChanged(const QString &arg1);
     void on_connectButton_released();
     void on_pushButton_released();
 
+    void on_parachuteButton_released();
+
+    void on_setServoButton_released();
+
+    void on_setHome_button_released();
+
+    void on_forward_serialButton_released();
+
 private:
     bool success;
     bool time_to_exit;
     QTimer* tmrTimer;
+    QTimer *heartbeatTimer;
     QTimer* tmr_serial_timeout;
 
 

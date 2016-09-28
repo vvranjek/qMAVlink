@@ -6,6 +6,9 @@
 #include "fstream"
 #include <sys/time.h>
 #include <QThread>
+#include <QLabel>
+#include <string>
+#include <ostream>
 
 
 #define PRINT_MAVLINK_ID(x)   ui->mavlinkIn->append(x+QString::fromLatin1("   ")+QString::number(etimer.elapsed()));
@@ -23,15 +26,23 @@ MainWindow::MainWindow(QWidget *parent) :
     tmrTimer = new QTimer(this);
     connect(tmrTimer,  SIGNAL(timeout()),this,SLOT(main_slot()));
     tmrTimer->start(30);
+    heartbeatTimer = new QTimer(this);
+    connect(heartbeatTimer,  SIGNAL(timeout()),this,SLOT(heartbeat()));
+    heartbeatTimer->start(100);
 
     //etimer = new QElapsedTimer(this);
     etimer.start();
+
+    debug = 1;
 
 
     QStringList _baud_rates;
     _baud_rates << "4800" << "9600" << "19200" << "38400" << "57600" << "115200" << "230400";
     ui->baudBox->addItems(_baud_rates);
-    ui->baudBox->setCurrentIndex(ui->baudBox->findText("115200"));
+    ui->baudBox->setCurrentIndex(ui->baudBox->findText("57600"));
+    ui->parachuteSpinBox->setValue(3);
+    ui->forwardSerialtextEdit->setText("Testing");
+    ui->ignoreRegularCheckBox->setChecked(1);
 
     _refresh_serial();
     connect_serial();
@@ -99,139 +110,128 @@ void MainWindow::read_messages()
                 ui->mavlinkIn->append(" ");
                 PRINT_MAVLINK_ID("HEARTBEAT ( #0 )");
                 mavlink_msg_heartbeat_decode(&message, &(current_messages.heartbeat));
-                //current_messages.time_stamps.heartbeat = get_time_usec();
-                //this_timestamps.heartbeat = current_messages.time_stamps.heartbeat;
-                ui->mavlinkIn->append("sys_id: " + QString::number(message.sysid));
-                ui->mavlinkIn->append("com_id: " + QString::number(message.compid));
-                ui->mavlinkIn->append("msg_id: " + QString::number(message.msgid));
-                //ui->mavlinkIn->append("MSG_ID: " + QString::number(current_messages.));
-
-                //ui->mavlinkIn->append(" ");
+//                PRINT_MAVLINK_DATA("sysid: " + QString::number(message.sysid));
+//                PRINT_MAVLINK_DATA("compid: " + QString::number(message.compid));
+//                PRINT_MAVLINK_DATA("msgid: " + QString::number(message.msgid));
+//                PRINT_MAVLINK_DATA("seq: " + QString::number(message.seq));
+//                PRINT_MAVLINK_DATA("custom: " + QString::number(current_messages.heartbeat.custom_mode));
                 break;
             }
             case MAVLINK_MSG_ID_SYS_STATUS:            {
-                PRINT_MAVLINK_ID("SYS_STATUS ( #1 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("SYS_STATUS ( #1 )");
                 mavlink_msg_sys_status_decode(&message, &(current_messages.sys_status));
-                //current_messages.time_stamps.sys_status = get_time_usec();
-                //this_timestamps.sys_status = current_messages.time_stamps.sys_status;
                 break;
             }
             case MAVLINK_MSG_ID_BATTERY_STATUS:            {
-                PRINT_MAVLINK_ID("BATTERY_STATUS ( #147 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("BATTERY_STATUS ( #147 )");
                 mavlink_msg_battery_status_decode(&message, &(current_messages.battery_status));
-                //current_messages.time_stamps.battery_status = get_time_usec();
-                //this_timestamps.battery_status = current_messages.time_stamps.battery_status;
                 break;
             }
             case MAVLINK_MSG_ID_RADIO_STATUS:            {
-                PRINT_MAVLINK_ID("RADIO_STATUS ( #109 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("RADIO_STATUS ( #109 )");
                 mavlink_msg_radio_status_decode(&message, &(current_messages.radio_status));
-                //current_messages.time_stamps.radio_status = get_time_usec();
-                //this_timestamps.radio_status = current_messages.time_stamps.radio_status;
                 break;
             }
             case MAVLINK_MSG_ID_LOCAL_POSITION_NED:            {
-                PRINT_MAVLINK_ID("LOCAL_POSITION_NED ( #32 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("LOCAL_POSITION_NED ( #32 )");
                 mavlink_msg_local_position_ned_decode(&message, &(current_messages.local_position_ned));
-                // current_messages.time_stamps.local_position_ned = get_time_usec();
-                //  this_timestamps.local_position_ned = current_messages.time_stamps.local_position_ned;
-                //ui->mavlinkIn->append("Roll: %f", current_messages.attitude.roll);
                 break;
             }
             case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:            {
-                PRINT_MAVLINK_ID("GLOBAL_POSITION_INT ( #33 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("GLOBAL_POSITION_INT ( #33 )");
                 mavlink_msg_global_position_int_decode(&message, &(current_messages.global_position_int));
-                // current_messages.time_stamps.global_position_int = get_time_usec();
-                // this_timestamps.global_position_int = current_messages.time_stamps.global_position_int;
                 break;
             }
             case MAVLINK_MSG_ID_POSITION_TARGET_LOCAL_NED:            {
-                PRINT_MAVLINK_ID("SET_POSITION_TARGET_LOCAL_NED ( #84 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("SET_POSITION_TARGET_LOCAL_NED ( #84 )");
                 mavlink_msg_position_target_local_ned_decode(&message, &(current_messages.position_target_local_ned));
-                // current_messages.time_stamps.position_target_local_ned = get_time_usec();
-                // this_timestamps.position_target_local_ned = current_messages.time_stamps.position_target_local_ned;
                 break;
             }
             case MAVLINK_MSG_ID_POSITION_TARGET_GLOBAL_INT:            {
-                PRINT_MAVLINK_ID("POSITION_TARGET_GLOBAL_INT ( #87 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("POSITION_TARGET_GLOBAL_INT ( #87 )");
                 mavlink_msg_position_target_global_int_decode(&message, &(current_messages.position_target_global_int));
-                // current_messages.time_stamps.position_target_global_int = get_time_usec();
-                // this_timestamps.position_target_global_int = current_messages.time_stamps.position_target_global_int;
                 break;
             }
             case MAVLINK_MSG_ID_HIGHRES_IMU:            {
-                PRINT_MAVLINK_ID("HIGHRES_IMU ( #105 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("HIGHRES_IMU ( #105 )");
                 mavlink_msg_highres_imu_decode(&message, &(current_messages.highres_imu));
-                // current_messages.time_stamps.highres_imu = get_time_usec();
-                // this_timestamps.highres_imu = current_messages.time_stamps.highres_imu;
                 break;
             }
             case MAVLINK_MSG_ID_ATTITUDE:            {
-                PRINT_MAVLINK_ID("ATTITUDE ( #30 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("ATTITUDE ( #30 )");
                 mavlink_msg_attitude_decode(&message, &(current_messages.attitude));
-                //  current_messages.time_stamps.attitude = get_time_usec();
-                //  this_timestamps.attitude = current_messages.time_stamps.attitude;
-                //ui->mavlinkIn->append("par1: %f", current_messages.attitude.roll);
-                //std::cout << "MAVLINK_MSG_ID_ATTITUDE" << "";
-
-
                 break;
             }
             case MAVLINK_MSG_ID_RC_CHANNELS:            {
-                PRINT_MAVLINK_ID("RC_CHANNELS ( #65 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("RC_CHANNELS ( #65 )");
                 mavlink_msg_rc_channels_decode(&message, &(current_messages.rc_channels));
-                //   current_messages.time_stamps.rc_channels = get_time_usec();
-                //   this_timestamps.rc_channels = current_messages.time_stamps.rc_channels;
-                //ui->mavlinkIn->append("chan1: %f", current_messages.rc_channels.chan1_raw);
                 break;
             }
             case MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE:            {
-                PRINT_MAVLINK_ID("RC_CHANNELS_OVERRIDE ( #70 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("RC_CHANNELS_OVERRIDE ( #70 )");
                 mavlink_msg_rc_channels_override_decode(&message, &(current_messages.rc_channels_override));
-                //  current_messages.time_stamps.rc_channels_override = get_time_usec();
-                //  this_timestamps.rc_channels_override = current_messages.time_stamps.rc_channels_override;
-                //PRINT_MAVLINK_ID("chan1_override: %f", current_messages.rc_channels_override.chan1_raw);
                 break;
             }
             case MAVLINK_MSG_ID_ATTITUDE_TARGET:            {
-                PRINT_MAVLINK_ID("ATTITUDE_TARGET ( #83 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("ATTITUDE_TARGET ( #83 )");
                 mavlink_msg_attitude_decode(&message, &(current_messages.attitude));
-                //  current_messages.time_stamps.attitude = get_time_usec();
-                //  this_timestamps.attitude = current_messages.time_stamps.attitude;
                 break;
             }
             case MAVLINK_MSG_ID_VFR_HUD:            {
-                PRINT_MAVLINK_ID("VFR_HUD ( #74 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("VFR_HUD ( #74 )");
                 break;
             }
             case MAVLINK_MSG_ID_SERVO_OUTPUT_RAW:            {
-                PRINT_MAVLINK_ID("SERVO_OUTPUT_RAW ( #36 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("SERVO_OUTPUT_RAW ( #36 )");
                 break;
             }
             case MAVLINK_MSG_ID_MISSION_CURRENT:            {
-                PRINT_MAVLINK_ID("MISSION_CURRENT ( #42 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("MISSION_CURRENT ( #42 )");
                 break;
             }
             case MAVLINK_MSG_ID_GPS_RAW_INT:            {
-                PRINT_MAVLINK_ID("GPS_RAW_INT ( #24 )");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("GPS_RAW_INT ( #24 )");
                 break;
             }
             case MAVLINK_MSG_ID_ALTITUDE:{
-                PRINT_MAVLINK_ID("ALTITUDE (141)");
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("ALTITUDE (141)");
                 mavlink_msg_altitude_decode(&message, &(current_messages.altitude));
-            }
-            case MAVLINK_MSG_ID_VIBRATION:{
-                PRINT_MAVLINK_ID("VIBRATION (241)");
-                mavlink_msg_vibration_decode(&message, &(current_messages.vibration));
-            }
-            case MAVLINK_MSG_ID_EXTENDED_SYS_STATE:{
-                PRINT_MAVLINK_ID("EXTENDED_SYS_STATE ( #245 )");
-                mavlink_msg_extended_sys_state_decode(&message, &(current_messages.extended_sys_state));
+                break;
             }
 
+            case MAVLINK_MSG_ID_EXTENDED_SYS_STATE:{
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("EXTENDED_SYS_STATE ( #245 )");
+                mavlink_msg_extended_sys_state_decode(&message, &(current_messages.extended_sys_state));
+                break;
+            }
+            case MAVLINK_MSG_ID_VIBRATION:{
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                PRINT_MAVLINK_ID("VIBRATION (241)");
+                mavlink_msg_vibration_decode(&message, &(current_messages.vibration));
+                break;
+            }
             case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:{
                 PRINT_MAVLINK_ID("MISSION_REQUEST_LIST ( #43 )");
                 mavlink_msg_mission_request_list_decode(&message, &(current_messages.mission_request_list));
+                break;
             }
             case MAVLINK_MSG_ID_PARAM_SET:{
                 PRINT_MAVLINK_ID("PARAM_SET ( #23 )");
@@ -241,37 +241,26 @@ void MainWindow::read_messages()
                 PRINT_MAVLINK_DATA("param_value: " + QString::number(current_messages.param_set.param_value));
                 PRINT_MAVLINK_DATA("target_component: " + QString::number(current_messages.param_set.target_component));
                 PRINT_MAVLINK_DATA("target_system: " + QString::number(current_messages.param_set.target_system));
-
-
+                break;
             }
             case MAVLINK_MSG_ID_MISSION_ACK:{
                 PRINT_MAVLINK_ID("MISSION_ACK ( #47 )");
                 mavlink_msg_mission_ack_decode(&message, &(current_messages.mission_ack));
-            }
+                PRINT_MAVLINK_DATA("type: " + QString::number(current_messages.mission_ack.type));
+                break;
+                }
             case MAVLINK_MSG_ID_STATUSTEXT:{
                 PRINT_MAVLINK_ID("STATUSTEXT ( #253 )");
+
                 mavlink_msg_statustext_decode(&message, &(current_messages.statustext));
-                ui->statusText->append("Severity: " + QString::number(current_messages.statustext.severity));
-                ui->statusText->append(QString::fromLocal8Bit(current_messages.statustext.text));
+                ui->statusText->append("  (" + QString::number(current_messages.statustext.severity) + ") ");
+                ui->statusText->insertPlainText(QString::fromLocal8Bit(current_messages.statustext.text));
                 printf("STATUS: %s\n", current_messages.statustext.text);
+                break;
             }
-                //            case MAVLINK_MSG_ID_:{
-                //                ui->mavlinkIn->append("");
-                //                mavlink_msg_(&message, &(current_messages.));
-                //            }
-                //            case MAVLINK_MSG_ID_:{
-                //                ui->mavlinkIn->append("");
-                //                mavlink_msg_(&message, &(current_messages.));
-                //            }
-
-
             case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:            {
                 PRINT_MAVLINK_ID("PARAM_REQUEST_LIST ( #21 )");
                 mavlink_msg_param_request_list_decode(&message, &(current_messages.param_request_list));
-                // ui->mavlinkIn->append("SYS_ID: " + QString::number(message.sysid));
-                //ui->mavlinkIn->append("COM_ID: " + QString::number(message.compid));
-
-                //ui->mavlinkIn->append(" ");
                 break;
             }
             case MAVLINK_MSG_ID_COMMAND_LONG:            {
@@ -297,37 +286,120 @@ void MainWindow::read_messages()
                 PRINT_MAVLINK_DATA("param5: " + QString::number(current_messages.command_long.param5));
                 PRINT_MAVLINK_DATA("param6: " + QString::number(current_messages.command_long.param6));
                 PRINT_MAVLINK_DATA("param7: " + QString::number(current_messages.command_long.param7));
-
-                //ui->mavlinkIn->append(" ");
                 break;
             }
-                //            case MAVLINK_MSG_ID_:
-                //            {
-                //                PRINT_MAVLINK_ID("\n");
-                //                mavlink_msg__decode(&message, &(current_messages.));
-                //                ui->mavlinkIn->append("SYS_ID: " + QString::number(message.sysid));
-                //                ui->mavlinkIn->append("COM_ID: " + QString::number(message.compid));
+            case MAVLINK_MSG_ID_SET_MODE:            {
+                PRINT_MAVLINK_ID("SET_MODE ( #11 )");
+                mavlink_msg_set_mode_decode(&message, &(current_messages.set_mode));
+                PRINT_MAVLINK_DATA("base_mode: " + QString::number(current_messages.set_mode.base_mode));
+                PRINT_MAVLINK_DATA("custom_mode: " + QString::number(current_messages.set_mode.custom_mode));
+                PRINT_MAVLINK_DATA("target_system: " + QString::number(current_messages.set_mode.target_system));
+                break;
+            }
+            case MAVLINK_MSG_ID_PARAM_VALUE:            {
+                PRINT_MAVLINK_ID("PARAM_VALUE ( #22 )");
+                mavlink_msg_param_value_decode(&message, &(current_messages.param_value));
+                PRINT_MAVLINK_DATA("param_index: " + QString::number(current_messages.param_value.param_index));
+                PRINT_MAVLINK_DATA("param_count: " + QString::number(current_messages.param_value.param_count));
+                PRINT_MAVLINK_DATA("param_type: " + QString::number(current_messages.param_value.param_type));
+                PRINT_MAVLINK_DATA("param_value: " + QString::number(current_messages.param_value.param_value));
+                break;
+            }
+            case MAVLINK_MSG_ID_CAP_STATUS:            {
+                PRINT_MAVLINK_ID("CAP_STATUS");
+                mavlink_msg_cap_status_decode(&message, &(current_messages.cap_status));
+                PRINT_MAVLINK_DATA("Parachute: " + QString::number(current_messages.cap_status.parachute_status));
+                PRINT_MAVLINK_DATA("Home_init: " + QString::number(current_messages.cap_status.home_init_status));
+                PRINT_MAVLINK_DATA("Airspeed_init: " + QString::number(current_messages.cap_status.airspeed_cal_status));
+
+                break;
+            }
+            case MAVLINK_MSG_ID_SERIAL_PASSTHROUGH:            {
+                PRINT_MAVLINK_ID("SERIAL_FORWARD");
+                mavlink_msg_serial_passthrough_decode(&message, &(current_messages.serial_passthrough));
+               // std::string str((char*)current_messages.serial_passthrough.data, (char*)current_messages.serial_passthrough.data + current_messages.serial_passthrough.size);
+
+                char* temp = (char*)current_messages.serial_passthrough.data;
+
+
+                std::string str(temp, temp+current_messages.serial_passthrough.size);
+                //std::string str(temp, temp + 5);
+
+                ui->serialPassthroughText->append(QString::fromUtf8(str.c_str()));
+
+
+                PRINT_MAVLINK_DATA(QString::fromUtf8(str.c_str()));
+                PRINT_MAVLINK_DATA("Size: " + QString::number(current_messages.serial_passthrough.size));
+                PRINT_MAVLINK_DATA("Number: " + QString::number(current_messages.serial_passthrough.number));
+
+                /* Send ACK */
+
+                mavlink_serial_passthrough_ack_t cmd;
+
+                cmd.number = current_messages.serial_passthrough.number;
+                cmd.error = 0;
+
+                mavlink_message_t msg;
+                mavlink_msg_serial_passthrough_ack_encode(255, 1, &msg, &cmd);
+                write_message(msg);
+
+                break;
+            }
+
+            case MAVLINK_MSG_ID_WIND_COV:            {
+                if(!ui->ignoreRegularCheckBox->isChecked()) {
+                    PRINT_MAVLINK_ID("WIND_COV");
+                    mavlink_msg_wind_cov_decode(&message, &(current_messages.wind_cov));
+                }
+                break;
+            }
+            case MAVLINK_MSG_ID_NAV_CONTROLLER_OUTPUT:            {
+                if(!ui->ignoreRegularCheckBox->isChecked())
+                    PRINT_MAVLINK_ID("NAV_CONTROLLER_OUTPUT");
+                //mavlink_msg__decode(&message, &(current_messages.highres_imu));
+                break;
+            }
+                //            case MAVLINK_MSG_ID_:            {
+                //            if(!ui->ignoreRegularCheckBox->isChecked()) {
+                //                PRINT_MAVLINK_ID("");
+                //                //mavlink_msg__decode(&message, &(current_messages.highres_imu));
+                //            }
                 //                break;
                 //            }
-                //            case MAVLINK_MSG_ID_:
-                //            {
-                //                printf("MAVLINK_MSG_ID_\n");
+                //            case MAVLINK_MSG_ID_:            {
+                //            if(!ui->ignoreRegularCheckBox->isChecked()) {
+                //                PRINT_MAVLINK_ID("");
+                //                //mavlink_msg__decode(&message, &(current_messages.highres_imu));
+                //            }
                 //                break;
                 //            }
-                //            case MAVLINK_MSG_ID_:
-                //            {
-                //                printf("MAVLINK_MSG_ID_\n");
+                //            case MAVLINK_MSG_ID_:            {
+                //            if(!ui->ignoreRegularCheckBox->isChecked()) {
+                //                PRINT_MAVLINK_ID("");
+                //                //mavlink_msg__decode(&message, &(current_messages.highres_imu));
+                //            }
                 //                break;
                 //            }
-                //            case MAVLINK_MSG_ID_:
-                //            {
-                //                printf("MAVLINK_MSG_ID_\n");
+                //            case MAVLINK_MSG_ID_:            {
+                //            if(!ui->ignoreRegularCheckBox->isChecked()) {
+                //                PRINT_MAVLINK_ID("");
+                //                //mavlink_msg__decode(&message, &(current_messages.highres_imu));
+                //            }
                 //                break;
                 //            }
-                
+                //            case MAVLINK_MSG_ID_:            {
+                //            if(!ui->ignoreRegularCheckBox->isChecked()) {
+                //                PRINT_MAVLINK_ID("");
+                //                //mavlink_msg__decode(&message, &(current_messages.highres_imu));
+                //            }
+                //                break;
+                //            }
+
+
+
             default:
             {
-                ui->mavlinkIn->append("Warning!!!! Did not handle message " + QString::number(message.msgid));
+                ui->debugText->append("Warning!!!! Did not handle message " + QString::number(message.msgid));
                 printf("Warning!!!! Did not handle message %i\n", message.msgid);
                 
                 break;
@@ -360,6 +432,18 @@ void MainWindow::read_messages()
     return;
 }
 
+void MainWindow::heartbeat(){
+    if(ui->heatbeatCheckBox->isChecked()){
+
+        mavlink_message_t msg;
+        mavlink_heartbeat_t cmd;
+
+        mavlink_msg_heartbeat_encode(255, 1, &msg, &cmd);
+
+        write_message(msg);
+    }
+}
+
 int MainWindow::read_message(mavlink_message_t &message)
 {
     uint8_t          cp;
@@ -376,9 +460,6 @@ int MainWindow::read_message(mavlink_message_t &message)
     ui->serialBrowser->append("\t");
     ui->serialBrowser->append(QString::number(cp_temp).toLatin1());
 
-
-
-    
     //   PARSE MESSAGE
     if (result > 0)
     {
@@ -469,11 +550,10 @@ void MainWindow::on_sendButton_released()
     mavlink_command_long_t cmd;
     bool armed = 1;
 
-
     cmd.command = (uint16_t)MAV_CMD_COMPONENT_ARM_DISARM;
     cmd.confirmation = 0;
     cmd.target_component = 0;
-    cmd.param1 = armed ? 1.0f : 0.0f;
+    cmd.param1 = 1;
     cmd.param2 = 0.0f;
     cmd.param3 = 0.0f;
     cmd.param4 = 0.0f;
@@ -483,8 +563,7 @@ void MainWindow::on_sendButton_released()
     cmd.target_system = 1;
     cmd.target_component = 0;
 
-    mavlink_msg_command_long_encode(1, 1, &msg, &cmd);
-
+    mavlink_msg_command_long_encode(255, 0, &msg, &cmd);
     write_message(msg);
 }
 
@@ -521,11 +600,7 @@ int MainWindow::connect_serial(){
     }
 }
 
-
-
-
-void MainWindow::on_connectButton_released()
-{
+void MainWindow::on_connectButton_released() {
     if (!ui->connectButton->isChecked()){
         port->close();
     }
@@ -537,4 +612,117 @@ void MainWindow::on_connectButton_released()
 void MainWindow::on_pushButton_released()
 {
     ui->mavlinkIn->clear();
+}
+
+void MainWindow::on_parachuteButton_released()
+{
+    mavlink_message_t msg;
+    mavlink_command_long_t cmd;
+
+    cmd.command = (uint16_t)MAV_CMD_DO_PARACHUTE;
+    cmd.confirmation = 1;
+    cmd.target_component = 0;
+    cmd.param1 = ui->parachuteSpinBox->value();
+    cmd.param2 = 0.0f;
+    cmd.param3 = 0.0f;
+    cmd.param4 = 0.0f;
+    cmd.param5 = 0.0f;
+    cmd.param6 = 0.0f;
+    cmd.param7 = 0.0f;
+    cmd.target_system = 1;
+    cmd.target_component = 0;
+
+    mavlink_msg_command_long_encode(255, 0, &msg, &cmd);
+    write_message(msg);
+}
+
+void MainWindow::on_setServoButton_released()
+{
+
+    mavlink_message_t msg;
+    mavlink_command_long_t cmd;
+
+    cmd.command = (uint16_t)MAV_CMD_DO_PARACHUTE;
+    cmd.confirmation = 1;
+    cmd.target_component = 0;
+    cmd.param1 = ui->parachuteSpinBox->value();
+    cmd.param2 = 0.0f;
+    cmd.param3 = 0.0f;
+    cmd.param4 = 0.0f;
+    cmd.param5 = 0.0f;
+    cmd.param6 = 0.0f;
+    cmd.param7 = 0.0f;
+    cmd.target_system = 1;
+    cmd.target_component = 0;
+
+    mavlink_msg_command_long_encode(255, 0, &msg, &cmd);
+    write_message(msg);
+
+
+
+
+
+//    mavlink_message_t msg;
+//    mavlink_command_long_t cmd;
+
+//    cmd.command = (uint16_t)MAV_CMD_DO_SET_SERVO;
+//    cmd.confirmation = 1;
+//    cmd.target_component = 0;
+//    cmd.param1 = ui->setServoNUmberSpinBox->value();
+//    cmd.param2 = ui->setServoSpinBox->value();
+//    cmd.param3 = 0.0f;
+//    cmd.param4 = 0.0f;
+//    cmd.param5 = 0.0f;
+//    cmd.param6 = 0.0f;
+//    cmd.param7 = 0.0f;
+//    cmd.target_system = 1;
+//    cmd.target_component = 0;
+
+//    mavlink_msg_command_long_encode(255, 0, &msg, &cmd);
+//    write_message(msg);
+}
+
+void MainWindow::on_setHome_button_released()
+{
+    mavlink_message_t msg;
+    mavlink_command_long_t cmd;
+
+    cmd.command = (uint16_t)MAV_CMD_DO_SET_HOME;
+    cmd.confirmation = 1;
+    cmd.target_component = 0;
+    cmd.param1 = 0.0f;
+    cmd.param2 = 0.0f;
+    cmd.param3 = 0.0f;
+    cmd.param4 = 0.0f;
+    cmd.param5 = 46.073126f;
+    cmd.param6 = 14.514700f;
+    cmd.param7 = 300.0f;
+    cmd.target_system = 1;
+    cmd.target_component = 0;
+
+    mavlink_msg_command_long_encode(255, 0, &msg, &cmd);
+    write_message(msg);
+}
+
+void MainWindow::on_forward_serialButton_released()
+{
+    static mavlink_serial_passthrough_t cmd;
+    mavlink_message_t msg;
+
+    static unsigned char number;
+
+    QByteArray array = ui->forwardSerialtextEdit->toPlainText().toLocal8Bit();
+//    array.append(": Number ");
+//    array.append(QString::number(number));
+    array.append("\n");
+    char const* buffer = array.data();
+
+    strcpy((char*)cmd.data, buffer);
+    cmd.size = strlen(buffer);
+    cmd.number = number;
+    ui->debugText->append("Sending number " + QString::number(number));
+    mavlink_msg_serial_passthrough_encode(255, 0, &msg, &cmd);
+    write_message(msg);
+    number++;
+
 }
