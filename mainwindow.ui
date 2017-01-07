@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1218</width>
-    <height>905</height>
+    <width>1235</width>
+    <height>995</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -217,7 +217,7 @@
       <x>330</x>
       <y>590</y>
       <width>511</width>
-      <height>201</height>
+      <height>101</height>
      </rect>
     </property>
    </widget>
@@ -260,11 +260,24 @@
    <widget class="QTextEdit" name="serialPassthroughText">
     <property name="geometry">
      <rect>
-      <x>10</x>
-      <y>380</y>
-      <width>301</width>
-      <height>201</height>
+      <x>120</x>
+      <y>700</y>
+      <width>1051</width>
+      <height>171</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="serialpassthroughClear">
+    <property name="geometry">
+     <rect>
+      <x>120</x>
+      <y>880</y>
+      <width>99</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Clear</string>
     </property>
    </widget>
   </widget>
@@ -273,7 +286,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1218</width>
+     <width>1235</width>
      <height>25</height>
     </rect>
    </property>

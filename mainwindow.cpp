@@ -39,9 +39,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QStringList _baud_rates;
     _baud_rates << "4800" << "9600" << "19200" << "38400" << "57600" << "115200" << "230400";
     ui->baudBox->addItems(_baud_rates);
-    ui->baudBox->setCurrentIndex(ui->baudBox->findText("57600"));
+    ui->baudBox->setCurrentIndex(ui->baudBox->findText("115200"));
     ui->parachuteSpinBox->setValue(3);
-    ui->forwardSerialtextEdit->setText("Testing");
     ui->ignoreRegularCheckBox->setChecked(1);
 
     _refresh_serial();
@@ -325,7 +324,9 @@ void MainWindow::read_messages()
                 std::string str(temp, temp+current_messages.serial_passthrough.size);
                 //std::string str(temp, temp + 5);
 
-                ui->serialPassthroughText->append(QString::fromUtf8(str.c_str()));
+               // ui->serialPassthroughText->setCursor(QTextCursor::End);
+                ui->serialPassthroughText->insertPlainText(QString::fromUtf8(str.c_str()));
+               // ui->serialPassthroughText->setCursor(QTextCursor::End);
 
 
                 PRINT_MAVLINK_DATA(QString::fromUtf8(str.c_str()));
@@ -338,6 +339,8 @@ void MainWindow::read_messages()
 
                 cmd.number = current_messages.serial_passthrough.number;
                 cmd.error = 0;
+
+                ui->statusText->append("Sending ACK" + QString::number(cmd.number));
 
                 mavlink_message_t msg;
                 mavlink_msg_serial_passthrough_ack_encode(255, 1, &msg, &cmd);
@@ -423,8 +426,8 @@ void MainWindow::read_messages()
                 this_timestamps.attitude                   ;
         
         // give the write thread time to use the port
-        if ( writing_status > false )
-            QThread::usleep(100); // look for components of batches at 10kHz
+        //if ( writing_status > false )
+            //QThread::usleep(100); // look for components of batches at 10kHz
         
     } // end: while not received all
     
@@ -457,18 +460,20 @@ int MainWindow::read_message(mavlink_message_t &message)
     cp = cp_temp;
 
     ui->serialBrowser->append(QString::number(cp_temp));
-    ui->serialBrowser->append("\t");
-    ui->serialBrowser->append(QString::number(cp_temp).toLatin1());
+    //ui->serialBrowser->append("\t");
+    //ui->serialBrowser->append(QString::number(cp_temp).toLatin1());
 
     //   PARSE MESSAGE
     if (result > 0)
     {
         // the parsing
         msgReceived = mavlink_parse_char(MAVLINK_COMM_1, cp, &message, &status);
+       // QDebug << "Status " << status.
 
         // check for dropped packets
         if ( (lastStatus.packet_rx_drop_count != status.packet_rx_drop_count) && debug )
         {
+            ui->statusText->append("Packet droped");
             printf("ERROR: DROPPED %d PACKETS\n", status.packet_rx_drop_count);
             unsigned char v=cp;
             fprintf(stderr,"%02x ", v);
@@ -486,7 +491,7 @@ int MainWindow::read_message(mavlink_message_t &message)
     if(msgReceived && debug)
     {
         // Report info
-        printf("Received message from serial with ID #%d (sys:%d|comp:%d):\n", message.msgid, message.sysid, message.compid);
+        printf("Received message from serial with ID #%d (sys:%d|comp:%d), size: %d\n", message.msgid, message.sysid, message.compid, sizeof(message));
         
         fprintf(stderr,"Received serial data: ");
         unsigned int i;
@@ -548,12 +553,21 @@ void MainWindow::on_sendButton_released()
 
     mavlink_message_t msg;
     mavlink_command_long_t cmd;
-    bool armed = 1;
+    static bool armed = 0;
+
+    if (armed) {
+        armed = 0;
+        ui->sendButton->setText("Arm");
+    }
+    else {
+        armed = 1;
+        ui->sendButton->setText("Disarm");
+    }
 
     cmd.command = (uint16_t)MAV_CMD_COMPONENT_ARM_DISARM;
     cmd.confirmation = 0;
     cmd.target_component = 0;
-    cmd.param1 = 1;
+    cmd.param1 = armed;
     cmd.param2 = 0.0f;
     cmd.param3 = 0.0f;
     cmd.param4 = 0.0f;
@@ -582,6 +596,7 @@ int MainWindow::_refresh_serial(){
             ui->portBox->setCurrentIndex(ui->portBox->findText(info.portName));
         }
     }
+    return 0;
 }
 
 int MainWindow::connect_serial(){
@@ -592,7 +607,7 @@ int MainWindow::connect_serial(){
     port->setPortName(ui->portBox->currentText());
 
     if (!port->open(QIODevice::ReadWrite)){
-        printf("Connected to %s", ui->portBox->currentText().toStdString());
+        printf("Connected to %s", ui->portBox->currentText().toStdString().c_str());
         return 0;
     }
     else {
@@ -714,6 +729,9 @@ void MainWindow::on_forward_serialButton_released()
     QByteArray array = ui->forwardSerialtextEdit->toPlainText().toLocal8Bit();
 //    array.append(": Number ");
 //    array.append(QString::number(number));
+
+    array.append(13);
+    array.append(10);
     array.append("\n");
     char const* buffer = array.data();
 
@@ -725,4 +743,9 @@ void MainWindow::on_forward_serialButton_released()
     write_message(msg);
     number++;
 
+}
+
+void MainWindow::on_serialpassthroughClear_released()
+{
+    ui->serialPassthroughText->clear();
 }

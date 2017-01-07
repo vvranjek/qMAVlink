@@ -173,6 +173,8 @@ private slots:
 
     void on_forward_serialButton_released();
 
+    void on_serialpassthroughClear_released();
+
 private:
     bool success;
     bool time_to_exit;
